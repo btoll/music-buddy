@@ -5,22 +5,27 @@ parser.add_argument("tonic", help="The tonic note of the scale", type=str)
 parser.add_argument("-f", "--flat", help="Flat", action="store_true")
 parser.add_argument("-s", "--sharp", help="Sharp", action="store_true")
 parser.add_argument("-d", "--delimiter", help="The symbol that separates the notes", type=str, default="  ")
-#parser.add_argument("-v", "--verbose", help="Add extra information", type=str, default=False)
+parser.add_argument("-v", "--verbose", help="Add extra information", action="store_true")
 args = parser.parse_args()
 
 accidentals = {
     "": "",
-    "flat": b"\xe2\x99\xad".decode(),
-    "sharp": b"\xe2\x99\xaf".decode(),
-    "natural": b"\xe2\x99\xae".decode(),
+    #    "flat": b"\xe2\x99\xad".decode(),
+    "flat": "flat",
+    #    "sharp": b"\xe2\x99\xaf".decode(),
+    "sharp": "sharp",
+    "natural": b"\xe3\x99\xae".decode(),
     "doubleflat": b"\xe2\x99\xad\xe2\x99\xad".decode(),
     "doublesharp": b"\xe2\x99\xaf\xe2\x99\xaf".decode(),
     #doublesharp = b"\xf0\x9d\x84\xaa"
 }
 
+
+diatonic_notes = ( "A", "B", "C", "D", "E", "F", "G" )
+
 intervals = {
     "major": ( 1, 1, 0, 1, 1, 1, 0 ),
-    #    "harmonic_minor": (1, 0, 1, 1, 0, 1.5, 0 ),
+    #"harmonic_minor": (1, 0, 1, 1, 0, 1.5, 0 ),
     "melodic_minor": ( 1, 0, 1, 1, 1, 1, 0 ),
     "natural_minor": ( 1, 0, 1, 1, 0, 1, 1 ),
 }
@@ -45,6 +50,11 @@ def get_major_pentatonic_scale(major_scale):
     return major_scale[0], major_scale[:3] + major_scale[4:6]
 
 
+#def get_blues_scale(major_scale):
+#    # 1, 3, 4, flat 5, 5, 7
+#    minor_tonic, minor_scale = get_relative_minor_scale(major_scale)
+#    return minor_tonic, minor_scale[:1] + minor_scale[2:5] + minor_scale[6:7]
+
 def get_relative_minor_pentatonic_scale(major_scale):
     # 1, 3, 4, 5, 7
     minor_tonic, minor_scale = get_relative_minor_scale(major_scale)
@@ -57,22 +67,33 @@ def get_relative_minor_scale(major_scale):
     return front[0], front + back + front[:1]
 
 
-def get_scale(intervals):
-    notes = ( "A", "B", "C", "D", "E", "F", "G" )
-    half_steps = ( "C", "F" )
+#def get_relative_minor_scale(tonic):
+#    relative_minor_tonic = diatonic_notes[ ( diatonic_notes.index(tonic) + 2 ) % len(diatonic_notes) ]
+#    _, major_scale = get_scale(relative_minor_tonic, intervals["major"])
+#    front = major_scale[-3:]
+#    back = major_scale[1:-3]
+#    return front[0], front + back + front[:1]
 
-    i = notes.index(args.tonic.upper())
+
+def get_scale(tonic, intervals):
+    half_steps = ( "C", "F" )
+    tonic = tonic.upper()
+
+    i = diatonic_notes.index(tonic)
     interval = intervals[0]
-    partial_scale = notes[i+1:] + notes[:i]
+    partial_scale = diatonic_notes[i+1:] + diatonic_notes[:i]
 
     # Note that `get_accidental()` can't be called here because we don't
     # want the empty string (the default) to return a "sharp".
     # Else, the key of E would have its tonic changed to E♯.
-    tonic = args.tonic.upper() + display_key_string()
+    tonic = tonic + display_key_string()
     carried = bool(display_key_string())
 
     scale = [tonic]
     acc = get_accidental()
+
+    if tonic == "F":
+        return tonic, ["F", "G", "A", "Bflat", "C", "D", "E", "F"]
 
     # C natural and all sharps.
     if not args.flat and not args.sharp or args.sharp:
@@ -107,22 +128,26 @@ def get_scale(intervals):
 
 
 try:
-    tonic, major_scale = get_scale(intervals["major"])
-
+    tonic, major_scale = get_scale(args.tonic, intervals["major"])
     print(args.tonic.upper() + display_key_string() + " major:")
     print(args.delimiter.join(major_scale))
 
-    _, major_pentatonic_scale = get_major_pentatonic_scale(major_scale)
-    print("\n" + tonic + " major pentatonic:")
-    print("    ".join(major_pentatonic_scale))
+    if args.verbose:
+    #    tonic, natural_minor_scale = get_scale(args.tonic, intervals["natural_minor"])
+    #    print(args.tonic.upper() + display_key_string() + " natural minor:")
+    #    print(args.delimiter.join(natural_minor_scale))
 
-    relative_minor_tonic, minor_scale = get_relative_minor_scale(major_scale)
-    print("\n" + "".join(relative_minor_tonic) + " relative minor:")
-    print("    ".join(minor_scale))
+        _, major_pentatonic_scale = get_major_pentatonic_scale(major_scale)
+        print("\n" + tonic + " major pentatonic:")
+        print("    ".join(major_pentatonic_scale))
 
-    _, minor_pentatonic_scale = get_relative_minor_pentatonic_scale(major_scale)
-    print("\n" + "".join(relative_minor_tonic) + " minor pentatonic scale:")
-    print("    ".join(minor_pentatonic_scale))
+        relative_minor_tonic, minor_scale = get_relative_minor_scale(major_scale)
+        print("\n" + "".join(relative_minor_tonic) + " natural (relative) minor:")
+        print("    ".join(minor_scale))
+
+        _, minor_pentatonic_scale = get_relative_minor_pentatonic_scale(major_scale)
+        print("\n" + "".join(relative_minor_tonic) + " minor pentatonic scale:")
+        print("    ".join(minor_pentatonic_scale))
 except ValueError as err:
     print("[ERROR] The tonic note must be in the range A..G")
 
