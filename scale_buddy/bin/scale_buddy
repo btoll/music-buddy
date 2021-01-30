@@ -1,0 +1,11 @@
+#!/usr/bin/env python3
+
+import sys
+import scale_buddy.main
+
+def main():
+    return scale_buddy.main.main()
+
+if __name__ == '__main__':
+    sys.exit(main())
+

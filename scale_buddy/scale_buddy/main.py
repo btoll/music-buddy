@@ -93,17 +93,17 @@ def get_scale(tonic, intervals):
     acc = get_accidental()
 
     if tonic == "F":
-        return tonic, ["F", "G", "A", "Bflat", "C", "D", "E", "F"]
+        return tonic, ["F", "G", "A", "".join(("B", accidentals["flat"])), "C", "D", "E", "F"]
 
     # C natural and all sharps.
     if not args.flat and not args.sharp or args.sharp:
         for idx, note in enumerate(partial_scale):
-            i = intervals[idx]
-            if i is 1 and note in half_steps or \
-                i is 1 and note not in half_steps and carried or \
+            interval = intervals[idx]
+            if interval is 1 and note in half_steps or \
+                interval is 1 and note not in half_steps and carried or \
                 note in half_steps and carried:
                     carried = True
-                    scale.append(note + acc)
+                    scale.append("".join((note, acc)))
             else:
                 carried = False
                 scale.append(note)
@@ -111,14 +111,14 @@ def get_scale(tonic, intervals):
     # All flats.
     if args.flat:
         for idx, note in enumerate(partial_scale):
-            i = intervals[idx]
-            if i is 1 and carried and note not in half_steps or \
-                i is 0 and not carried and note not in half_steps or \
-                i is 0 and carried and note in half_steps:
+            interval = intervals[idx]
+            if interval is 1 and carried and note not in half_steps or \
+                interval is 0 and not carried and note not in half_steps or \
+                interval is 0 and carried and note in half_steps:
                     carried = True
-                    scale.append(note + acc)
-#            elif i is 1 and carried and note in half_steps or \
-#                i is 1 and not carried and note not in half_steps:
+                    scale.append("".join((note, acc)))
+#            elif interval is 1 and carried and note in half_steps or \
+#                interval is 1 and not carried and note not in half_steps:
             else:
                 carried = False
                 scale.append(note)
@@ -127,27 +127,33 @@ def get_scale(tonic, intervals):
     return tonic, scale
 
 
-try:
-    tonic, major_scale = get_scale(args.tonic, intervals["major"])
-    print(args.tonic.upper() + display_key_string() + " major:")
-    print(args.delimiter.join(major_scale))
+def main():
+    try:
+        tonic, major_scale = get_scale(args.tonic, intervals["major"])
+        print(args.tonic.upper() + display_key_string() + " major:")
+        print(args.delimiter.join(major_scale))
 
-    if args.verbose:
-    #    tonic, natural_minor_scale = get_scale(args.tonic, intervals["natural_minor"])
-    #    print(args.tonic.upper() + display_key_string() + " natural minor:")
-    #    print(args.delimiter.join(natural_minor_scale))
+        if args.verbose:
+        #    tonic, natural_minor_scale = get_scale(args.tonic, intervals["natural_minor"])
+        #    print(args.tonic.upper() + display_key_string() + " natural minor:")
+        #    print(args.delimiter.join(natural_minor_scale))
 
-        _, major_pentatonic_scale = get_major_pentatonic_scale(major_scale)
-        print("\n" + tonic + " major pentatonic:")
-        print("    ".join(major_pentatonic_scale))
+            _, major_pentatonic_scale = get_major_pentatonic_scale(major_scale)
+            print("\n" + tonic + " major pentatonic:")
+            print("    ".join(major_pentatonic_scale))
 
-        relative_minor_tonic, minor_scale = get_relative_minor_scale(major_scale)
-        print("\n" + "".join(relative_minor_tonic) + " natural (relative) minor:")
-        print("    ".join(minor_scale))
+            relative_minor_tonic, minor_scale = get_relative_minor_scale(major_scale)
+            print("\n" + "".join(relative_minor_tonic) + " natural (relative) minor:")
+            print("    ".join(minor_scale))
 
-        _, minor_pentatonic_scale = get_relative_minor_pentatonic_scale(major_scale)
-        print("\n" + "".join(relative_minor_tonic) + " minor pentatonic scale:")
-        print("    ".join(minor_pentatonic_scale))
-except ValueError as err:
-    print("[ERROR] The tonic note must be in the range A..G")
+            _, minor_pentatonic_scale = get_relative_minor_pentatonic_scale(major_scale)
+            print("\n" + "".join(relative_minor_tonic) + " minor pentatonic scale:")
+            print("    ".join(minor_pentatonic_scale))
+    except ValueError as err:
+        print("[ERROR] The tonic note must be in the range A..G")
+
+
+if __name__ == "__main__":
+    exit(main())
+
 
